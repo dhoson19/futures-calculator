@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Futures Calculator with TradingView Chart</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; }
+        input, select { width: 100%; padding: 8px; margin-bottom: 10px; }
+        button { background-color: #4CAF50; color: white; padding: 10px 15px; border: none; cursor: pointer; }
+        button:hover { background-color: #45a049; }
+        #result { margin-top: 20px; font-weight: bold; }
+        #tradingview-widget-container { height: 500px; margin-top: 20px; }
+        #chartErrorMessage { color: red; font-weight: bold; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Futures Calculator with TradingView Chart</h1>
+        <div class="form-group">
+            <label for="instrument">Instrument:</label>
+            <select id="instrument" onchange="updateChart()">
+                <option value="ES1!">E-mini S&P 500 (ES)</option>
+                <option value="NQ1!">E-mini Nasdaq-100 (NQ)</option>
+                <option value="YM1!">E-mini Dow (YM)</option>
+                <option value="CL1!">Crude Oil (CL)</option>
+                <option value="GC1!">Gold (GC)</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="entryPrice">Entry Price:</label>
+            <input type="number" id="entryPrice" step="0.01" required>
+        </div>
+        <div class="form-group">
+            <label for="exitPrice">Exit Price:</label>
+            <input type="number" id="exitPrice" step="0.01" required>
+        </div>
+        <div class="form-group">
+            <label for="contracts">Number of Contracts:</label>
+            <input type="number" id="contracts" min="1" value="1" required>
+        </div>
+        <div class="form-group">
+            <label for="direction">Direction:</label>
+            <select id="direction">
+                <option value="long">Long</option>
+                <option value="short">Short</option>
+            </select>
+        </div>
+        <button onclick="calculateProfit()">Calculate Profit/Loss</button>
+        <div id="result"></div>
+        <div id="tradingview-widget-container"></div>
+        <div id="chartErrorMessage"></div>
+    </div>
+
+    <script type="text/javascript">
+        const instrumentDetails = {
+            'ES1!': { tickSize: 0.25, tickValue: 12.50 },
+            'NQ1!': { tickSize: 0.25, tickValue: 5.00 },
+            'YM1!': { tickSize: 1.00, tickValue: 5.00 },
+            'CL1!': { tickSize: 0.01, tickValue: 10.00 },
+            'GC1!': { tickSize: 0.10, tickValue: 10.00 }
+        };
+
+        function updateChart() {
+            const instrument = document.getElementById('instrument').value;
+            const container = document.getElementById('tradingview-widget-container');
+            container.innerHTML = `
+                <iframe src="https://s.tradingview.com/widgetembed/?frameElementId=tradingview_76d87&symbol=${instrument}&interval=D&hidesidetoolbar=1&hidetoptoolbar=1&symboledit=1&saveimage=1&toolbarbg=F1F3F6&studies=[]&hideideas=1&theme=Light&style=1&timezone=Etc%2FUTC&studies_overrides={}&overrides={}&enabled_features=[]&disabled_features=[]&locale=en&utm_source=&utm_medium=widget&utm_campaign=chart&utm_term=${instrument}"
+                        style="width: 100%; height: 100%;"
+                        frameborder="0" 
+                        allowtransparency="true" 
+                        scrolling="no" 
+                        allowfullscreen>
+                </iframe>
+            `;
+        }
+
+        function calculateProfit() {
+            const instrument = document.getElementById('instrument').value;
+            const entryPrice = parseFloat(document.getElementById('entryPrice').value);
+            const exitPrice = parseFloat(document.getElementById('exitPrice').value);
+            const contracts = parseInt(document.getElementById('contracts').value);
+            const direction = document.getElementById('direction').value;
+
+            const { tickSize, tickValue } = instrumentDetails[instrument];
+            const ticks = Math.abs(exitPrice - entryPrice) / tickSize;
+            const profitLoss = direction === 'long' ? 
+                (exitPrice - entryPrice) / tickSize * tickValue * contracts :
+                (entryPrice - exitPrice) / tickSize * tickValue * contracts;
+
+            const resultText = `Profit/Loss: $${profitLoss.toFixed(2)}`;
+            document.getElementById('result').innerText = resultText;
+        }
+
+        // Initialize the chart when the page loads
+        document.addEventListener('DOMContentLoaded', updateChart);
+    </script>
+</body>
+</html>
